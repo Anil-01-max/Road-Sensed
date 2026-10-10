@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoadSense</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#">
+      <span class="logo">R</span>
+      <span><b>RoadSense</b><small>Community road intelligence</small></span>
+    </a>
+    <div id="status" class="status">● Demo mode</div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">TRAVEL WITH MORE CONTEXT</p>
+        <h1>Find a better road, not just a faster one.</h1>
+        <p>Compare routes using road reports and experimental phone sensor readings.</p>
+      </div>
+      <button id="locationBtn" class="secondary" type="button">Use my location</button>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><span>Total reports</span><b id="reportCount">0</b></div>
+      <div class="stat"><span>Potholes</span><b id="potholeCount">0</b></div>
+      <div class="stat"><span>Rough roads</span><b id="roughCount">0</b></div>
+      <div class="stat"><span>Noise reports</span><b id="noiseStat">0</b></div>
+    </section>
+
+    <section class="card">
+      <p class="eyebrow">ROUTE PLANNER</p>
+      <h2>Where are you going?</h2>
+
+      <form id="routeForm" class="route-form">
+        <div class="field autocomplete">
+          <label for="routeOrigin">Starting point (optional)</label>
+          <input id="routeOrigin" placeholder="Current location or address" autocomplete="off">
+          <div id="originSuggestions" class="suggestions"></div>
+        </div>
+
+        <div class="field autocomplete">
+          <label for="routeDestination">Destination</label>
+          <input id="routeDestination" placeholder="Search a place" autocomplete="off" required>
+          <div id="destinationSuggestions" class="suggestions"></div>
+        </div>
+
+        <button id="findRoutesBtn" type="submit">Show directions</button>
+      </form>
+
+      <p id="routeMessage" class="muted">Enter a destination to begin.</p>
+
+      <!-- Route cards appear above the comfort score -->
+      <div id="routeChoices" class="route-choices" hidden></div>
+
+      <div class="comfort">
+        <div><span>Comfort score</span><b id="comfortScore">--</b></div>
+        <p id="comfortText">Prototype estimate based on available reports.</p>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="card map-card">
+        <p class="eyebrow">COMMUNITY MAP</p>
+        <h2>Road reports</h2>
+
+        <div class="tabs">
+          <button type="button" class="tab active" data-layer="all">All</button>
+          <button type="button" class="tab" data-layer="pothole">Potholes</button>
+          <button type="button" class="tab" data-layer="rough">Rough roads</button>
+          <button type="button" class="tab" data-layer="noise">Noise</button>
+        </div>
+
+        <div id="map"></div>
+        <p class="muted">Sample reports are demo data.</p>
+      </div>
+
+      <aside class="side-column">
+        <section class="card">
+          <p class="eyebrow">PHONE SENSORS</p>
+          <h2>Sensor readings</h2>
+
+          <div class="sensor">
+            <div class="sensor-title">
+              <span>Motion / roughness</span>
+              <b id="roughValue">--</b>
+            </div>
+            <p id="motionStatus" class="sensor-status">Motion sensor not started.</p>
+            <button id="journeyBtn" class="secondary full" type="button">Start journey</button>
+          </div>
+
+          <div class="sensor">
+            <div class="sensor-title">
+              <span>Microphone / noise</span>
+              <b id="noiseValue">--</b>
+            </div>
+            <p id="micStatus" class="sensor-status">Microphone inactive.</p>
+            <button id="micBtn" class="secondary full" type="button">Enable microphone</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <p class="eyebrow">ADD A REPORT</p>
+          <h2>Report a road issue</h2>
+
+          <form id="reportForm" class="stack">
+            <div class="field">
+              <label for="roadName">Road / area name</label>
+              <input id="roadName" placeholder="e.g. MG Road" required>
+            </div>
+
+            <div class="field">
+              <label for="issueType">Issue type</label>
+              <select id="issueType">
+                <option value="pothole">Pothole</option>
+                <option value="rough">Rough road</option>
+                <option value="noise">High noise</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="severity">Severity</label>
+              <select id="severity">
+                <option value="low">Low</option>
+                <option value="moderate" selected>Moderate</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="message">Notes</label>
+              <textarea id="message" rows="2" placeholder="Optional details"></textarea>
+            </div>
+
+            <button type="submit">Add report</button>
+          </form>
+          <p id="appMessage" class="notice"></p>
+        </section>
+
+        <section class="card">
+          <p class="eyebrow">LATEST ACTIVITY</p>
+          <h2>Recent reports</h2>
+          <div id="reportFeed" class="report-feed"></div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <section id="navigationScreen" hidden>
+    <div class="nav-panel">
+      <button id="exitNavigation" class="secondary" type="button">Back to map</button>
+
+      <div class="turn-card">
+        <div id="turnIcon" class="turn-icon">↑</div>
+        <div>
+          <b id="turnAction">Recommended route</b>
+          <p id="turnRoad">Follow the highlighted road</p>
+          <small id="thenTurn">Continue to your destination</small>
+        </div>
+      </div>
+
+      <div id="map-placeholder"></div>
+
+      <div class="nav-metrics">
+        <div><span>Distance</span><b id="navDistance">--</b></div>
+        <div><span>Duration</span><b id="navDuration">--</b></div>
+        <div><span>Arrival</span><b id="navArrival">--</b></div>
+      </div>
+
+      <p id="navComfort" class="muted"></p>
+      <button id="startNavigation" class="full" type="button">Start location updates</button>
+      <button id="recenterMap" class="secondary full" type="button">Recenter map</button>
+      <h3>Directions</h3>
+      <div id="directionList" class="report-feed"></div>
+    </div>
+  </section>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
